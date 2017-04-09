@@ -70,7 +70,11 @@ public class Breeder extends JPanel
 	popSize = curPopulation.length;
     Prisoner[] Selected;
     if(selection == 1){
-        Selected = new Prisoner[popSize-selParam];
+        if(selParam <= popSize){
+            Selected = new Prisoner[popSize-selParam];
+        }else{
+            Selected = new Prisoner[popSize];
+        }
     }else{
         Selected = new Prisoner[popSize]; // parent pop after selection
     }
@@ -180,7 +184,8 @@ public class Breeder extends JPanel
 	}
 	// putting elites(no variations) and offspring(mutation & crossover) together
 	else if(selection == 1){
-		Prisoner[] newCur = new Prisoner[popSize+elites.size()];
+        popSize += elites.size();
+		Prisoner[] newCur = new Prisoner[popSize];
 		int index = 0;
 		for(int i = 0; i < elites.size(); i++){
 			newCur[index++] = elites.get(i);
