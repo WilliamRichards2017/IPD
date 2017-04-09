@@ -101,18 +101,6 @@ public class Breeder extends JPanel
 		    {
 		    selIndex = indexBest;
 		    }
-
-    //test to hard code select 1 elite clone
-    else if (selection == 1) {
-
-      while (selParam > 0) {
-        addEliteClone();
-        updateCloneList();
-        selection--;
-
-      }
-
-    }
 		else  // otherwise select random individual
 		    {
 			selIndex = rand.nextInt(popSize);
@@ -120,6 +108,25 @@ public class Breeder extends JPanel
 		Selected[i] = (Prisoner)curPopulation[selIndex].clone();
 	    }
 	}
+	
+	//test to hard code select 1 elite clone
+    else if (selection == 1) {
+		
+		// Sort prisoners based on their fitness values
+		sortByFitness(curPopulation);
+		
+		for(int i = 0; i < popSize; i++){
+			System.out.println(curPopulation[i].getScore());
+		}
+		
+		// optional elitism
+		
+		
+		// sigma scaling
+		
+		
+		// fitness proportional & stochastic universal sampling
+    }
 
 	else {  // any other selection method fill pop with always cooperate
 	    for (int i=0; i<popSize; i++)
@@ -161,7 +168,42 @@ public class Breeder extends JPanel
 	return curPopulation; //return the bred population
     }
 
-
+	
+	/**
+	 * Use quick sort for sorting population by fintess value
+	 */
+	private void sortByFitness(Prisoner[] c){
+		quickSort(c, 0, c.length-1);
+	}
+	
+	private void quickSort(Prisoner[] c, int lo, int hi){
+		if(lo < hi){
+			int mid = partition(c, lo, hi);
+			partition(c, lo, mid-1);
+			partition(c, mid+1, hi);
+		}
+	}
+	
+	private int partition(Prisoner[] c, int lo, int hi){
+		int pivot = c[lo].getScore();
+		int wall = lo + 1;
+		
+		for(int i = lo + 1; i <= hi; i++){
+			if(c[i].getScore() < pivot){
+				swap(c, wall, i);
+				wall++;
+			}
+		}
+		swap(c, --wall, lo);
+		return wall;
+	}
+	
+	private void swap(Prisoner[] c, int i, int j){
+		Prisoner temp = Prisoner[i];
+		Prisoner[i] = Prisoner[j];
+		Prisoner[j] = temp;
+	}
+	
     /**
      *Responsible for updating the graphical representation
      */
