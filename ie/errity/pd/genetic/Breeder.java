@@ -6,8 +6,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.BitSet;
 import java.util.Random;
-
-import java.io.*;
+import java.util.ArrayList;
 
 /**
  * Provides a means of evolving a population of
@@ -70,7 +69,7 @@ public class Breeder extends JPanel
 	curPopulation = c;	//population to breed
 	popSize = curPopulation.length;
 	Prisoner Selected[] = new Prisoner[popSize]; // parent pop after selection
-
+	ArrayList<Prisoner> elites = new ArrayList<Prisoner>();
 
 	// Select parents for next gen
 	// ***ADD CODE (make separate functions) to perform each of the types of selection***
@@ -119,15 +118,21 @@ public class Breeder extends JPanel
 		
 		// Sort prisoners based on their fitness values
 		sortByFitness(curPopulation);
-		
 		System.out.println("After Sort");
 		for(int i = 0; i < popSize; i++){
 			System.out.print(curPopulation[i].getScore() + " ");
 		}System.out.println();
 		
 		// optional elitism
+		if(selParam > 0){
+			for(int i = 0; i < selParam; i++){
+				elites.add(curPopulation[i]);
+			}
+		}
 		
 		// sigma scaling
+		int available_spots = popSize - selParam;
+		scaleFitnessValues(curPopulation);
 		
 		// fitness proportional & stochastic universal sampling
     }
@@ -166,12 +171,37 @@ public class Breeder extends JPanel
 		Selected[d+1] = new Prisoner(Offspring[1]);
 	    }
 	}
+	
 	// pass on children pop to be parents of next gen
+	if(selection == 0){
+		curPopulation = Selected;
+	}
+	// putting elites(no variations) and offspring(mutation & crossover) together
+	else if(selection == 1){
+		Prisoner[] newCur = new Prisoner[popSize];
+		int index = 0;
+		for(int i = 0; i < elites.size(); i++){
+			newCur[index++] = elites.get(i);
+		}
+		for(int i = 0; i < Selected.length; i++){
+			newCur[index++] = Selected[i];
+		}
+	}else{
+		curPopulation = Selected;
+	}
+	
 	curPopulation = Selected;
 	repaint();	//update display (if any)
 	return curPopulation; //return the bred population
     }
 
+	/**
+	 * Given a list of prionsers, return 
+	 */
+	private void scaleFitnessValues(Prisoner[] c){
+		
+	}
+	
 	/**
 	 * Sort population by fitness
 	 */
@@ -191,7 +221,7 @@ public class Breeder extends JPanel
 		int pivot = c[high].getScore();
 		int wall = low;
 		for(int i = low; i < high; i++){
-			if(c[i].getScore() < pivot){
+			if(c[i].getScore() > pivot){
 				Prisoner temp = c[i];
 				c[i] = c[wall];
 				c[wall] = temp;
