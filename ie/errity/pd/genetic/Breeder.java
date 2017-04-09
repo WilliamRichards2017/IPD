@@ -7,6 +7,7 @@ import java.awt.event.*;
 import java.util.BitSet;
 import java.util.Random;
 
+import java.io.*;
 
 /**
  * Provides a means of evolving a population of
@@ -96,34 +97,37 @@ public class Breeder extends JPanel
 
 	    // select according to description above for this method
 	    for (int i=0; i<popSize; i++) {
-		int selIndex = 0;
-		if (rand.nextInt(100) < selParam)  // rand less than param, select best individual
-		    {
-		    selIndex = indexBest;
-		    }
-		else  // otherwise select random individual
-		    {
-			selIndex = rand.nextInt(popSize);
-		    }
-		Selected[i] = (Prisoner)curPopulation[selIndex].clone();
+			int selIndex = 0;
+			if (rand.nextInt(100) < selParam)  // rand less than param, select best individual
+				{
+				selIndex = indexBest;
+				}
+			else  // otherwise select random individual
+				{
+				selIndex = rand.nextInt(popSize);
+				}
+			Selected[i] = (Prisoner)curPopulation[selIndex].clone();
 	    }
 	}
 	
 	//test to hard code select 1 elite clone
     else if (selection == 1) {
+		System.out.println("Before Sort");
+		for(int i = 0; i < popSize; i++){
+			System.out.print(curPopulation[i].getScore() + " ");
+		}System.out.println();
 		
 		// Sort prisoners based on their fitness values
 		sortByFitness(curPopulation);
 		
+		System.out.println("After Sort");
 		for(int i = 0; i < popSize; i++){
-			System.out.println(curPopulation[i].getScore());
-		}
+			System.out.print(curPopulation[i].getScore() + " ");
+		}System.out.println();
 		
 		// optional elitism
 		
-		
 		// sigma scaling
-		
 		
 		// fitness proportional & stochastic universal sampling
     }
@@ -168,40 +172,36 @@ public class Breeder extends JPanel
 	return curPopulation; //return the bred population
     }
 
-	
 	/**
-	 * Use quick sort for sorting population by fintess value
+	 * Sort population by fitness
 	 */
 	private void sortByFitness(Prisoner[] c){
 		quickSort(c, 0, c.length-1);
 	}
 	
-	private void quickSort(Prisoner[] c, int lo, int hi){
-		if(lo < hi){
-			int mid = partition(c, lo, hi);
-			partition(c, lo, mid-1);
-			partition(c, mid+1, hi);
+	private void quickSort(Prisoner[] c, int low, int high){
+		if(low < high){
+			int p = partition(c, low, high);
+			quickSort(c, low, p-1);
+			quickSort(c, p+1, high);
 		}
 	}
 	
-	private int partition(Prisoner[] c, int lo, int hi){
-		int pivot = c[lo].getScore();
-		int wall = lo + 1;
-		
-		for(int i = lo + 1; i <= hi; i++){
+	private int partition(Prisoner[] c, int low, int high){
+		int pivot = c[high].getScore();
+		int wall = low;
+		for(int i = low; i < high; i++){
 			if(c[i].getScore() < pivot){
-				swap(c, wall, i);
+				Prisoner temp = c[i];
+				c[i] = c[wall];
+				c[wall] = temp;
 				wall++;
 			}
 		}
-		swap(c, --wall, lo);
+		Prisoner temp = c[wall];
+		c[wall] = c[high];
+		c[high] = temp;
 		return wall;
-	}
-	
-	private void swap(Prisoner[] c, int i, int j){
-		Prisoner temp = c[i];
-		c[i] = c[j];
-		c[j] = temp;
 	}
 	
     /**
