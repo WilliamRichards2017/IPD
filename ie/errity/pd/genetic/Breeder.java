@@ -199,9 +199,9 @@ public class Breeder extends JPanel
 	}
 	
 	private void swap(Prisoner[] c, int i, int j){
-		Prisoner temp = Prisoner[i];
-		Prisoner[i] = Prisoner[j];
-		Prisoner[j] = temp;
+		Prisoner temp = c[i];
+		c[i] = c[j];
+		c[j] = temp;
 	}
 	
     /**
