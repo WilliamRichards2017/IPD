@@ -132,7 +132,7 @@ public class Breeder extends JPanel
 		
 		// sigma scaling
 		int available_spots = popSize - selParam;
-		scaleFitnessValues(curPopulation);
+		double[] scaledFitness = scaleFitnessValues(curPopulation);
 		
 		// fitness proportional & stochastic universal sampling
     }
@@ -196,28 +196,33 @@ public class Breeder extends JPanel
     }
 
 	/**
-	 * Given a list of prionsers, return 
+	 * Given a list of prionsers, return a list of scaled fitness values
 	 */
-	private void scaleFitnessValues(Prisoner[] c){
+	private double[] scaleFitnessValues(Prisoner[] c){
     
-    float fitTotal = 0;
+    double[] scaledFitness = new double[c.length];
+    double fitTotal = 0;
     for (int i = 0; i < c.length; i++){
-    fitTotal += c[i].getScore();
+        fitTotal += c[i].getScore();
     }
     
     double fitMean = fitTotal/c.length;
-    
+    double variance = 0;
     double stdDev = 0;
     
     for (int i = 0; i < c.length; i++){
-        stdDev += Math.pow((c[i].getScore() -  fitMean),2)/popSize;		
+        variance += Math.pow((c[i].getScore() - fitMean),2);		
 	}
     
-       for (int i = 0; i < c.length; i++){
-       
-            c[i].setScore((int)((c[i].getScore()-fitMean)/(2*stdDev)));
-        }
+    variance = variance / c.length;
+    stdDev = Math.sqrt(variance);
     
+    for (int i = 0; i < c.length; i++){
+        scaledFitness[i] = (c[i].getScore()-fitMean)/(2*stdDev);
+        System.out.println(scaledFitness[i] + "/n");
+    }
+    
+    return scaledFitness;
     }
 	
 	/**
