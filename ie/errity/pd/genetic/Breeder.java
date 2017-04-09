@@ -199,8 +199,26 @@ public class Breeder extends JPanel
 	 * Given a list of prionsers, return 
 	 */
 	private void scaleFitnessValues(Prisoner[] c){
-		
+    
+    float fitTotal = 0;
+    for (int i = 0; i < c.length; i++){
+    fitTotal += c[i].getScore();
+    }
+    
+    double fitMean = fitTotal/c.length;
+    
+    double stdDev = 0;
+    
+    for (int i = 0; i < c.length; i++){
+        stdDev += Math.pow((c[i].getScore() -  fitMean),2)/popSize;		
 	}
+    
+       for (int i = 0; i < c.length; i++){
+       
+            c[i].setScore((int)((c[i].getScore()-fitMean)/(2*stdDev)));
+        }
+    
+    }
 	
 	/**
 	 * Sort population by fitness
