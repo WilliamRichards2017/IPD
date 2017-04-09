@@ -68,7 +68,12 @@ public class Breeder extends JPanel
     {
 	curPopulation = c;	//population to breed
 	popSize = curPopulation.length;
-	Prisoner Selected[] = new Prisoner[popSize]; // parent pop after selection
+    Prisoner[] Selected;
+    if(selection == 1){
+        Selected = new Prisoner[popSize-selParam];
+    }else{
+        Selected = new Prisoner[popSize]; // parent pop after selection
+    }
 	ArrayList<Prisoner> elites = new ArrayList<Prisoner>();
 
 	// Select parents for next gen
@@ -110,18 +115,9 @@ public class Breeder extends JPanel
 	}
 	
 	//test to hard code select 1 elite clone
-    else if (selection == 1) {
-		System.out.println("Before Sort");
-		for(int i = 0; i < popSize; i++){
-			System.out.print(curPopulation[i].getScore() + " ");
-		}System.out.println();
-		
+    else if (selection == 1) {		
 		// Sort prisoners based on their fitness values
 		sortByFitness(curPopulation);
-		System.out.println("After Sort");
-		for(int i = 0; i < popSize; i++){
-			System.out.print(curPopulation[i].getScore() + " ");
-		}System.out.println();
 		
 		// optional elitism
 		if(selParam > 0){
@@ -135,6 +131,10 @@ public class Breeder extends JPanel
 		double[] scaledFitness = scaleFitnessValues(curPopulation);
 		
 		// fitness proportional & stochastic universal sampling
+        Prisoner[] newSelected = FPSUS(curPopulation, scaledFitness, available_spots);
+        for(int i = 0; i < newSelected.length; i++){
+            Selected[i] = (Prisoner)newSelected[i].clone();
+        }
     }
 
 	else {  // any other selection method fill pop with always cooperate
@@ -142,9 +142,11 @@ public class Breeder extends JPanel
 		Selected[i] = new Prisoner("ALLC");
 	}
 
-
 	//Crossover & Mutate each pair of selected parents
 	BitSet Offspring[] = new BitSet[2];  // temporarily holds 2 children during crossover/mutation
+    if (selection == 1){
+        popSize -= elites.size();
+    }
 	for (int d=0; d<popSize; d+=2) {
 	    // in case of odd population, just mutate and replace last individual
 	    if (d+1 >= popSize) {
@@ -178,7 +180,7 @@ public class Breeder extends JPanel
 	}
 	// putting elites(no variations) and offspring(mutation & crossover) together
 	else if(selection == 1){
-		Prisoner[] newCur = new Prisoner[popSize];
+		Prisoner[] newCur = new Prisoner[popSize+elites.size()];
 		int index = 0;
 		for(int i = 0; i < elites.size(); i++){
 			newCur[index++] = elites.get(i);
@@ -186,13 +188,60 @@ public class Breeder extends JPanel
 		for(int i = 0; i < Selected.length; i++){
 			newCur[index++] = Selected[i];
 		}
+        for(int i = 0; i < curPopulation.length; i++){
+            curPopulation[i] = (Prisoner)newCur[i].clone();
+        }
 	}else{
 		curPopulation = Selected;
 	}
-	
-	curPopulation = Selected;
 	repaint();	//update display (if any)
 	return curPopulation; //return the bred population
+    }
+
+    /**
+     * Given a list of scaled fitness values,
+     * select offsprings using fitness proportional & stochastic universal sampling
+     */
+    private Prisoner[] FPSUS(Prisoner[] curPopulation,
+                             double[] scaledFitness,
+                             int available_spots){
+        double total_fitness = 0;
+        for(int i = 0; i < scaledFitness.length; i++){
+            total_fitness += scaledFitness[i];
+        }
+        
+        double ptr = total_fitness/available_spots;
+        double start = Math.random();
+        double[] ptrs = new double[available_spots];
+        for(int i = 0; i < available_spots; i++){
+            ptrs[i] = start + i*ptr;
+        }
+        return RWS(curPopulation, scaledFitness, ptrs);
+    }
+    
+    private Prisoner[] RWS(Prisoner[] population, double[] scaledFitness, double[] points){
+        Prisoner[] selected = new Prisoner[points.length];
+        double[] runningSum = new double[points.length];
+        for(int i = 0; i < runningSum.length; i++){
+            if(i == 0){
+                runningSum[i] = scaledFitness[i];
+            }else{
+                runningSum[i] = runningSum[i-1] + scaledFitness[i];
+            }
+        }
+        
+        for(int i = 0; i < points.length; i++){
+            double p = points[i];
+            int index = 0;
+            while((runningSum[index] < p)){
+                index++;
+                if (index == points.length-1){
+                break;
+                }
+            }
+            selected[i] = population[index];
+        }
+        return selected;
     }
 
 	/**
@@ -218,8 +267,12 @@ public class Breeder extends JPanel
     stdDev = Math.sqrt(variance);
     
     for (int i = 0; i < c.length; i++){
-        scaledFitness[i] = (c[i].getScore()-fitMean)/(2*stdDev);
-        System.out.println(scaledFitness[i] + "/n");
+        if(stdDev == 0){
+            scaledFitness[i] = 1;
+        }else{
+            scaledFitness[i] = 1 + (c[i].getScore()-fitMean)/(2*stdDev);
+        }
+        //System.out.println(scaledFitness[i] + "/n");
     }
     
     return scaledFitness;
