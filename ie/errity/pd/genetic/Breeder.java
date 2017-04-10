@@ -99,7 +99,10 @@ public class Breeder extends JPanel
 				}
 				Selected[i] = (Prisoner)curPopulation[selIndex].clone();
 			}
-		}else if(selection == 1){
+		}
+		
+		// selection method 1 implements optional elitism, fitness proportional & stochastic universal sampling
+		else if(selection == 1){
 			sortByFitness(curPopulation);
 			
 			// Optinal elitism
@@ -128,6 +131,40 @@ public class Breeder extends JPanel
 			}
 			for(int i = selIndex; i < popSize; i++){
 				Selected[i] = (Prisoner)newSelected[i].clone();
+			}
+		}
+		
+		// selection method 2 implements tournament selection
+		else if(selection == 2){
+			int selIndex = 0;
+			double k = 0.75;
+			while(selIndex < popSize){
+				
+				// generate two random indices that are not equal to each other
+				int idx1 = 0;
+				int idx2 = 0;
+				while(idx1 == idx2){
+					idx1 = getRandomNumber(0,popSize-1);
+					idx2 = getRandomNumber(0,popSize-1);
+				}
+				
+				Prisoner p1 = curPopulation[idx1];
+				Prisoner p2 = curPopulation[idx2];
+				Prisoner tournament_selected = null;
+				double r = Math.random();
+				
+				// select high fitness
+				if(r < k){
+					tournament_selected = (p1.getScore() > p2.getScore()) ? p1 : p2;
+					//System.out.println("Higher chosen: " + p1.getScore() + ", " + p2.getScore());
+				}
+				
+				// select lower fitness
+				else{
+					tournament_selected = (p1.getScore() > p2.getScore()) ? p2 : p1;
+					//System.out.println("Lower chosen: " + p1.getScore() + ", " + p2.getScore());
+				}
+				Selected[selIndex++] = (Prisoner)tournament_selected.clone();
 			}
 		}else {  // any other selection method fill pop with always cooperate
 			for (int i=0; i<popSize; i++)
@@ -166,6 +203,14 @@ public class Breeder extends JPanel
 		repaint();	//update display (if any)
 		return curPopulation; //return the bred population
     }
+	
+	/**
+	 * Returns a random number given a range
+	 */
+	private int getRandomNumber(int min, int max){
+		Random rand = new Random();
+		return rand.nextInt((max-min)+1) + min;
+	}
 	
 	/**
      * Given a list of scaled fitness values,
