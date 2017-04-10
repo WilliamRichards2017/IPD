@@ -119,6 +119,9 @@ public class Breeder extends JPanel
 				}
 			}
 			
+			// Shuffles the sorted list of prisoners
+			shuffle(curPopulation);
+			
 			// Sigma scaling
 			double[] scaledFitnesses = scaleFitnessValues(curPopulation);
 			
@@ -137,34 +140,21 @@ public class Breeder extends JPanel
 		// selection method 2 implements tournament selection
 		else if(selection == 2){
 			int selIndex = 0;
-			double k = 0.75;
 			while(selIndex < popSize){
+				// shuffle current population
+				shuffle(curPopulation);
 				
-				// generate two random indices that are not equal to each other
-				int idx1 = 0;
-				int idx2 = 0;
-				while(idx1 == idx2){
-					idx1 = getRandomNumber(0,popSize-1);
-					idx2 = getRandomNumber(0,popSize-1);
+				// pick the first selParam number of individuals
+				Prisoner[] tournaments = new Prisoner[selParam];
+				for(int i = 0; i < selParam; i++){
+					tournaments[i] = (Prisoner)curPopulation[i].clone();
 				}
 				
-				Prisoner p1 = curPopulation[idx1];
-				Prisoner p2 = curPopulation[idx2];
-				Prisoner tournament_selected = null;
-				double r = Math.random();
+				// sort the selected individuals by their fitness
+				sortByFitness(tournaments);
 				
-				// select high fitness
-				if(r < k){
-					tournament_selected = (p1.getScore() > p2.getScore()) ? p1 : p2;
-					//System.out.println("Higher chosen: " + p1.getScore() + ", " + p2.getScore());
-				}
-				
-				// select lower fitness
-				else{
-					tournament_selected = (p1.getScore() > p2.getScore()) ? p2 : p1;
-					//System.out.println("Lower chosen: " + p1.getScore() + ", " + p2.getScore());
-				}
-				Selected[selIndex++] = (Prisoner)tournament_selected.clone();
+				// store the best one into Selected list
+				Selected[selIndex++] = (Prisoner)tournaments[0].clone();
 			}
 		}else {  // any other selection method fill pop with always cooperate
 			for (int i=0; i<popSize; i++)
@@ -205,12 +195,20 @@ public class Breeder extends JPanel
     }
 	
 	/**
-	 * Returns a random number given a range
+	 * Randomly shuffles a list of prisoners
 	 */
-	private int getRandomNumber(int min, int max){
-		Random rand = new Random();
-		return rand.nextInt((max-min)+1) + min;
+	private void shuffle(Prisoner[] c){
+		int index;
+		Prisoner temp;
+		Random random = new Random();
+		for(int i = c.length - 1; i > 0; i--){
+			index = random.nextInt(i+1);
+			temp = c[index];
+			c[index] = c[i];
+			c[i] = temp;
+		}
 	}
+	
 	
 	/**
      * Given a list of scaled fitness values,
@@ -279,12 +277,15 @@ public class Breeder extends JPanel
 		variance = variance / c.length;
 		stdDev = Math.sqrt(variance);
     
+		double scaled = 0;
 		for (int i = 0; i < c.length; i++){
-			if(stdDev == 0){
-				scaledFitness[i] = 1;
-			}else{
-				scaledFitness[i] = 1 + (c[i].getScore()-fitMean)/(2*stdDev);
+			scaled = (stdDev == 0) ? 1 : 1 + (c[i].getScore()-fitMean)/(2*stdDev);
+			
+			// takes care of the case where a scaled fitness is <= 0
+			if(scaled <= 0){
+				scaled = 0.1;
 			}
+			scaledFitness[i] = scaled;
 		}
 		return scaledFitness;
     }
